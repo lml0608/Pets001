@@ -15,8 +15,11 @@
  */
 package com.example.android.pets;
 
+import android.app.LoaderManager;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -41,12 +44,18 @@ import com.google.android.gms.common.api.GoogleApiClient;
 /**
  * Displays list of pets that were entered and stored in the app.
  */
-public class CatalogActivity extends AppCompatActivity {
+public class CatalogActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<Cursor>{
 
     private static final String TAG = "CatalogActivity";
 
     private PetDbHelper mDbHelper;
     private ListView mPetListView;
+
+    private static final int PET_LOADER = 0;
+
+    //listview adapter适配器
+    PetCursorAdapter mCursorAdapter;
 
 
     @Override
@@ -73,49 +82,54 @@ public class CatalogActivity extends AppCompatActivity {
         //listview内容为空时，显示emptyView
         mPetListView.setEmptyView(emptyView);
 
-    }
+        mCursorAdapter = new PetCursorAdapter(this, null);
+        mPetListView.setAdapter(mCursorAdapter);
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        //每次启动活动重新加载数据，保持显示最新数据
-        displayDatabaseInfo();
-    }
-
-    /**
-     * 从数据库中查询数据并显示
-     */
-    private void displayDatabaseInfo() {
-
-        //创建或打开数据库
-        //SQLiteDatabase db = mDbHelper.getReadableDatabase();
-
-        //查询的字段
-        String[] projection ={
-                PetEntry._ID,
-                PetEntry.COLUMN_PET_NAME,
-                PetEntry.COLUMN_PET_BREED,
-                PetEntry.COLUMN_PET_GENDER,
-                PetEntry.COLUMN_PET_WEIGHT
-                };
-        Log.i(TAG, "PetEntry.CONTENT_URI=" + PetEntry.CONTENT_URI);
-
-        //查询
-        Cursor cursor = getContentResolver().query(
-                PetEntry.CONTENT_URI,
-                projection,
-                null,
-                null,
-                null);
-
-        //listview
-        mPetListView = (ListView) findViewById(R.id.list);
-
-        PetCursorAdapter adapter = new PetCursorAdapter(this, cursor);
-        //设置适配器
-        mPetListView.setAdapter(adapter);
-
-
+        getLoaderManager().initLoader(PET_LOADER, null, this);
+//
+//    }
+//
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        //每次启动活动重新加载数据，保持显示最新数据
+//        displayDatabaseInfo();
+//    }
+//
+//    /**
+//     * 从数据库中查询数据并显示
+//     */
+//    private void displayDatabaseInfo() {
+//
+//        //创建或打开数据库
+//        //SQLiteDatabase db = mDbHelper.getReadableDatabase();
+//
+//        //查询的字段
+//        String[] projection ={
+//                PetEntry._ID,
+//                PetEntry.COLUMN_PET_NAME,
+//                PetEntry.COLUMN_PET_BREED,
+//                PetEntry.COLUMN_PET_GENDER,
+//                PetEntry.COLUMN_PET_WEIGHT
+//                };
+//        Log.i(TAG, "PetEntry.CONTENT_URI=" + PetEntry.CONTENT_URI);
+//
+//        //查询
+//        Cursor cursor = getContentResolver().query(
+//                PetEntry.CONTENT_URI,
+//                projection,
+//                null,
+//                null,
+//                null);
+//
+//        //listview
+//        mPetListView = (ListView) findViewById(R.id.list);
+//
+//        PetCursorAdapter adapter = new PetCursorAdapter(this, cursor);
+//        //设置适配器
+//        mPetListView.setAdapter(adapter);
+//
+//
 
     }
 
@@ -155,7 +169,7 @@ public class CatalogActivity extends AppCompatActivity {
                 //插入虚拟数据
                 insertPet();
                 //插入数据后刷新展示的查询结果
-                displayDatabaseInfo();
+                //displayDatabaseInfo();
                 return true;
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
@@ -165,4 +179,31 @@ public class CatalogActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        String[] projection = {
+                PetEntry._ID,
+                PetEntry.COLUMN_PET_NAME,
+                PetEntry.COLUMN_PET_BREED
+        };
+        return new CursorLoader(this,
+                PetEntry.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+        mCursorAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+        mCursorAdapter.swapCursor(null);
+    }
 }
