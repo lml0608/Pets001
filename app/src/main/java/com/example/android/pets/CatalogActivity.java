@@ -46,6 +46,7 @@ public class CatalogActivity extends AppCompatActivity {
     private static final String TAG = "CatalogActivity";
 
     private PetDbHelper mDbHelper;
+    private ListView mPetListView;
 
 
     @Override
@@ -66,6 +67,11 @@ public class CatalogActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        mPetListView = (ListView) findViewById(R.id.list);
+        View emptyView = findViewById(R.id.empty_view);
+        //listview内容为空时，显示emptyView
+        mPetListView.setEmptyView(emptyView);
 
     }
 
@@ -102,11 +108,12 @@ public class CatalogActivity extends AppCompatActivity {
                 null,
                 null);
 
-        ListView petListView = (ListView) findViewById(R.id.list);
+        //listview
+        mPetListView = (ListView) findViewById(R.id.list);
 
         PetCursorAdapter adapter = new PetCursorAdapter(this, cursor);
-
-        petListView.setAdapter(adapter);
+        //设置适配器
+        mPetListView.setAdapter(adapter);
 
 
 
